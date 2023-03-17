@@ -14,6 +14,7 @@ class InputViewController: UIViewController {
     @IBOutlet weak var titleTextField: UITextField!
     @IBOutlet weak var contentsTextView: UITextView!
     @IBOutlet weak var datePicker: UIDatePicker!
+    @IBOutlet weak var categoryTextField: UITextField!
     var task: Task!
     let realm = try! Realm()
     override func viewDidLoad() {
@@ -32,11 +33,13 @@ class InputViewController: UIViewController {
         // キーボードを閉じる
         view.endEditing(true)
     }
+    //画面を離れるときの関数
     override func viewWillDisappear(_ animated: Bool) {
         try! realm.write {
             self.task.title = self.titleTextField.text!
             self.task.contents = self.contentsTextView.text
             self.task.date = self.datePicker.date
+            self.task.category = self.categoryTextField.text!
             self.realm.add(self.task, update: .modified)
         }
         //通知できるようにするよ

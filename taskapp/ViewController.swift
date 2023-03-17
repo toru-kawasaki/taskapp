@@ -9,24 +9,32 @@ import UIKit
 import RealmSwift
 import UserNotifications
 
-class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate{
 
     @IBOutlet weak var tableView: UITableView!
     
+    @IBOutlet weak var searchBar: UISearchBar!
+    @IBOutlet weak var searchTextView: UITextField!
+    //let config = RealmSwift.Realm.Configuration(schemaVersion: 1) // #1
+    //Realm.Configuration.defaultConfiguration = config // #2
     // Realmインスタンスを取得する
     let realm = try! Realm()  // ←追加
     
     // DB内のタスクが格納されるリスト。
      // 日付の近い順でソート：昇順
      // 以降内容をアップデートするとリスト内は自動的に更新される。
-     var taskArray = try! Realm().objects(Task.self).sorted(byKeyPath: "date", ascending: true)  // ←追加
-
+    var taskArray = try! Realm().objects(Task.self).filter("TRUEPREDICATE").sorted(byKeyPath: "date", ascending: true)  // ←追加
+    //var searchCondition:String! = "TRUEPREDICATE"
+    //var taskArray = try! Realm().objects(Task.self).filter("%@",self().searchCondition).sorted(byKeyPath: "date", ascending: true)  // ←追加
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         tableView.fillerRowHeight = UITableView.automaticDimension
         tableView.delegate = self
         tableView.dataSource = self
+        searchBar.delegate = self
     }
     // データの数（＝セルの数）を返すメソッド
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int{
@@ -36,16 +44,21 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     // かくセルの内容を返すメソッド
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell{
         //再利用可能なcellを得る
+        
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
         // Cellに値を設定する
         let task = taskArray[indexPath.row]
-        cell.textLabel?.text = task.title
+        //let filtered = taskArray.filter("category == 'as'")
+        //let task = filtered[indexPath.row]
+        cell.textLabel?.text = task.title + task.category
 
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm"
 
         let dateString:String = formatter.string(from: task.date)
+        
         cell.detailTextLabel?.text = dateString
+        
         return cell
     }
     
@@ -56,7 +69,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     //セルが削除可能なことを伝えるメソッド
     func tableView(_ tableView: UITableView, editingStyleForRowAt indexPath: IndexPath)-> UITableViewCell.EditingStyle {
-    return .delete
+        return .delete
     }
 
     //Delete ボタンが押された時に呼ばれるメソッド
@@ -106,6 +119,21 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     // 入力画面から戻ってきた時に TableView を更新させる
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        tableView.reloadData()
+    }
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        //let realm = try! Realm()
+
+        if searchText.isEmpty {
+            taskArray = try! Realm().objects(Task.self).filter("TRUEPREDICATE").sorted(byKeyPath: "date", ascending: true)
+            //toDoItems = realm.objects(ToDo)
+        } else {
+            taskArray = try! Realm().objects(Task.self).filter("category == %@", searchText).sorted(byKeyPath: "date", ascending: true)
+            //toDoItems = realm
+              //  .objects(ToDo)
+                //.filter("name BEGINSWITH %@", searchText)
+        }
+
         tableView.reloadData()
     }
 }

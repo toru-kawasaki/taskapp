@@ -7,7 +7,7 @@
 
 import UIKit
 import UserNotifications
-
+import RealmSwift
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
 
@@ -21,9 +21,27 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             // Enable or disable features based on authorization
         }
         center.delegate = self
+        
+        // マイグレーション処理
+        migration()
+        //let realm = try! Realm()
+
         return true
     }
+    // Realmマイグレーション処理
+    func migration() {
+      // 次のバージョン（現バージョンが０なので、１をセット）
+        let nextSchemaVersion = 1
 
+      // マイグレーション設定
+      let config = Realm.Configuration(
+        schemaVersion: UInt64(nextSchemaVersion),
+        migrationBlock: { migration, oldSchemaVersion in
+          if (oldSchemaVersion < nextSchemaVersion) {
+          }
+        })
+        Realm.Configuration.defaultConfiguration = config
+    }
     // MARK: UISceneSession Lifecycle
     
     // アプリがフォアグラウンドの時に通知を受け取ると呼ばれるメソッド --- ここから ---
